@@ -1,8 +1,8 @@
 data:extend({
-	{
-		type = "item-subgroup",
-		name = "barbed-wires",
-		group = "combat",
-		order = "g"
-	}
+    {
+        type = "item-subgroup",
+        name = "barbed-wires",
+        group = "combat",
+        order = "g"
+    }
 })
