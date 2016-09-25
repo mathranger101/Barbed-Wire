@@ -8,21 +8,112 @@ local function poskey(entity)
 	return tostring(entity.surface.name)..":"..tostring(position.x)..":"..tostring(position.y)
 end
 
-script.on_init(function()
-	local wireForce = game.create_force("barbedWire")
-	for _,force in pairs(game.forces) do
-		wireForce.set_cease_fire(force, false)
+local function init()
+	if game.forces.barbedWire == nil then
+		local wireForce = game.create_force("barbedWire")
+		for _,force in pairs(game.forces) do
+			wireForce.set_cease_fire(force, false)
+		end
 	end
 	-- poskey, entity
-	global.barbedWireMains = {}
-	global.barbedWireAccums = {}
-	global.barbedWireDummies = {}
-	global.barbedWireHazards = {}
+	global.barbedWireMains = global.barbedWireMains or {}
+	global.barbedWireAccums = global.barbedWireAccums or {}
+	global.barbedWireDummies = global.barbedWireDummies or {}
+	global.barbedWireHazards = global.barbedWireHazards or {}
 	-- poskey, health
-	global.barbedWireHealth = {}
+	global.barbedWireHealth = global.barbedWireHealth or {}
 	-- poskey, {entity, time}
-	global.barbedWireWaiting = {}
+	global.barbedWireWaiting = global.barbedWireWaiting or {}
+end
+
+local function indexWires()
+	local Mains = global.barbedWireMains
+	local Waiting = global.barbedWireWaiting
+	local Health = global.barbedWireHealth
+	local Hazards = global.barbedWireHazards
+	for _,surface in pairs(game.surfaces) do
+		for _,wire in pairs(surface.find_entities_filtered{name = "barbed-wire"}) do 
+			local key = poskey(wire)
+			if Mains[key] == nil then
+				local hazard = wire.surface.create_entity{name = wire.name.."-hazard", position = wire.position, force = "barbedWire"}
+				Mains[key] = wire
+				Waiting[key] = { wire, waitTime }
+				Health[key] = wire.health
+				Hazards[key] = hazard
+			end
+		end
+		for _,wire in pairs(surface.find_entities_filtered{name = "reinforced-barbed-wire"}) do 
+			local key = poskey(wire)
+			if Mains[key] == nil then
+				local hazard = wire.surface.create_entity{name = wire.name.."-hazard", position = wire.position, force = "barbedWire"}
+				Mains[key] = wire
+				Waiting[key] = { wire, waitTime }
+				Health[key] = wire.health
+				Hazards[key] = hazard
+			end
+		end
+		for _,wire in pairs(surface.find_entities_filtered{name = "slow-barbed-wire"}) do 
+			local key = poskey(wire)
+			if Mains[key] == nil then
+				local hazard = wire.surface.create_entity{name = wire.name.."-hazard", position = wire.position, force = "barbedWire"}
+				Mains[key] = wire
+				Waiting[key] = { wire, waitTime }
+				Health[key] = wire.health
+				Hazards[key] = hazard
+			end
+		end
+		for _,wire in pairs(surface.find_entities_filtered{name = "reinforced-slow-barbed-wire"}) do 
+			local key = poskey(wire)
+			if Mains[key] == nil then
+				local hazard = wire.surface.create_entity{name = wire.name.."-hazard", position = wire.position, force = "barbedWire"}
+				Mains[key] = wire
+				Waiting[key] = { wire, waitTime }
+				Health[key] = wire.health
+				Hazards[key] = hazard
+			end
+		end
+	end
+end
+
+local function unlockTech(reset)
+	for _,force in pairs(game.forces) do
+		if reset then 
+			force.reset_recipes()
+			force.reset_technologies()
+		end
+		if force.technologies["military"].researched then
+			force.recipes["barbed-wire"].enabled = true
+		end
+		if force.technologies["military-2"].researched then
+			force.recipes["reinforced-barbed-wire"].enabled = true
+		end
+		if force.technologies["military-3"].researched then
+			force.recipes["slow-barbed-wire"].enabled = true
+		end
+		if force.technologies["military-4"].researched then
+			force.recipes["reinforced-slow-barbed-wire"].enabled = true
+		end
+	end
+end
+
+script.on_init(function()
+	init()
+	indexWires()
 end)
+
+script.on_configuration_changed(
+	function(data)
+		if data.mod_changes ~= nil and data.mod_changes["Barbed-Wire"] ~= nil and data.mod_changes["Barbed-Wire"].old_version == nil then
+			init()
+			unlockTech(false) -- do not reset
+		end
+		if data.mod_changes ~= nil and data.mod_changes["Barbed-Wire"] ~= nil and data.mod_changes["Barbed-Wire"].old_version ~= nil then
+			init()
+			indexWires()
+			unlockTech(true) -- do reset
+		end
+	end
+)
 
 script.on_event(
 	defines.events.on_tick,
