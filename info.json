@@ -1,9 +1,9 @@
 {
 	"name": "Barbed-Wire",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"title": "Barbed-Wire",
 	"author": "MathRanger101",
 	"contact": "mathranger101@gmail.com",
-	"description": "Adds barbed-wire, which can be placed down and hurts any enemy that walks on it. \n They can be Reinforced(more health and damage), Slowing(slows down enemies), or both. \n They can also be charged, dealing piering damage.",
+	"description": "Adds barbed-wire, which can be placed down and hurts and slows down any enemy that walks on it. \n They can be Reinforced(more health and damage), Slowing(slows down more), or both. \n They can also be charged, dealing electrical damage.",
 	"factorio_version": "0.14"
 }

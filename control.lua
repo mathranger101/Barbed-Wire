@@ -9,10 +9,15 @@ local function poskey(entity)
 end
 
 script.on_init(function()
+	local wireForce = game.create_force("barbedWire")
+	for _,force in pairs(game.forces) do
+		wireForce.set_cease_fire(force, false)
+	end
 	-- poskey, entity
 	global.barbedWireMains = {}
 	global.barbedWireAccums = {}
 	global.barbedWireDummies = {}
+	global.barbedWireHazards = {}
 	-- poskey, health
 	global.barbedWireHealth = {}
 	-- poskey, {entity, time}
@@ -72,6 +77,16 @@ script.on_event(
 )
 
 script.on_event(
+	defines.events.on_force_created,
+	function(event)
+		local force = event.force
+		if force ~= game.forces.barbedWire then
+			game.forces.barbedWire.set_cease_fire(force, false)
+		end
+	end
+)
+
+script.on_event(
 	{
 		defines.events.on_built_entity,
 		defines.events.on_robot_built_entity
@@ -83,9 +98,11 @@ script.on_event(
 				or entityName == "slow-barbed-wire" or entityName == "reinforced-slow-barbed-wire" then
 			-- index
 			local key = poskey(entity)
+			local hazard = entity.surface.create_entity{name = entityName.."-hazard", position = entity.position, force = "barbedWire"}
 			global.barbedWireMains[key] = entity
 			global.barbedWireWaiting[key] = { entity, waitTime }
 			global.barbedWireHealth[key] = entity.health
+			global.barbedWireHazards[key] = hazard
 		end
 	end
 )
@@ -108,6 +125,7 @@ script.on_event(
 						findEntities { name = "slow-barbed-wire", position = pos }[1] or
 						findEntities { name = "reinforced-slow-barbed-wire", position = pos }[1]
 				Mains[key] = wire
+				wire.surface.create_entity{name = wire.name.."-hazard", position = wire.position, force = "barbedWire"}
 				global.barbedWireWaiting[key] = { wire, waitTime }
 			end
 			-- spawn charge projectile
@@ -136,6 +154,7 @@ script.on_event(
 				or name == "slow-barbed-wire" or name == "reinforced-slow-barbed-wire" then
 			local Accums = global.barbedWireAccums
 			local Dummies = global.barbedWireDummies
+			local Hazards = global.barbedWireHazards
 			local key = poskey(entity)
 			global.barbedWireMains[key] = nil
 			if Accums[key] then
@@ -144,22 +163,30 @@ script.on_event(
 				Dummies[key].destroy()
 				Dummies[key] = nil
 			end
+			if Hazards[key] then
+				Hazards[key].destroy()
+				Hazards[key] = nil
+			end
 			global.barbedWireWaiting[key] = nil
 			global.barbedWireHealth[key] = nil
 		elseif name == "barbed-wire-accumulator" or name == "reinforced-barbed-wire-accumulator"
 				or name == "slow-barbed-wire-accumulator" or name == "reinforced-slow-barbed-wire-accumulator" then
 			local Mains = global.barbedWireMains
 			local Dummies = global.barbedWireDummies
+			local Hazards = global.barbedWireHazards
 			local key = poskey(entity)
 			Mains[key].destroy()
 			Mains[key] = nil
 			Dummies[key].destroy()
 			Dummies[key] = nil
+			Hazards[key].destroy()
+			Hazards[key] = nil
 			global.barbedWireAccums[key] = nil
 			global.barbedWireWaiting[key] = nil
 			global.barbedWireHealth[key] = nil
 		end
-	end)
+	end
+)
 	
 script.on_event(
 	defines.events.on_entity_died,
@@ -170,6 +197,7 @@ script.on_event(
 				or name == "slow-barbed-wire" or name == "reinforced-slow-barbed-wire" then
 			local Accums = global.barbedWireAccums
 			local Dummies = global.barbedWireDummies
+			local Hazards = global.barbedWireHazards
 			local key = poskey(entity)
 			global.barbedWireMains[key] = nil
 			if Accums[key] then
@@ -177,6 +205,10 @@ script.on_event(
 				Accums[key] = nil
 				Dummies[key].destroy()
 				Dummies[key] = nil
+			end
+			if Hazards[key] then
+				Hazards[key].destroy()
+				Hazards[key] = nil
 			end
 			global.barbedWireWaiting[key] = nil
 			global.barbedWireHealth[key] = nil

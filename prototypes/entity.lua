@@ -1,4 +1,4 @@
-local dmg = 2
+local dmg = 2 / 1
 local multi = 3 
 local health = 15
 local attackArea = 0.7
@@ -25,6 +25,24 @@ data:extend({
 		flags = {},
 		animation =
 		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "extra-high",
+			width = 1,
+			height = 1,
+			frame_count = 1
+		},
+		duration_in_ticks = 30,
+		target_movement_modifier = 0.7
+	},
+	-- super slow down sticker
+	{
+		
+		type = "sticker",
+		name = "barbed-wire-super-slowdown-sticker",
+		flags = {"not-on-map"},
+		flags = {},
+		animation =
+		{
 			filename = "__base__/graphics/entity/slowdown-sticker/slowdown-sticker.png",
 			priority = "extra-high",
 			width = 11,
@@ -33,7 +51,7 @@ data:extend({
 			animation_speed = 0.4
 		},
 		duration_in_ticks = 30,
-		target_movement_modifier = 0.5
+		target_movement_modifier = 0.4
 	},
 	
 	-- PROJECTILES --
@@ -173,6 +191,10 @@ data:extend({
 									{
 										type = "damage",
 										damage = { amount = dmg, type = "physical"}
+									},
+									{
+										type = "create-sticker",
+										sticker = "barbed-wire-slowdown-sticker"
 									}
 								}
 							}
@@ -244,6 +266,10 @@ data:extend({
 									{
 										type = "damage",
 										damage = { amount = dmg * multi, type = "physical"}
+									},
+									{
+										type = "create-sticker",
+										sticker = "barbed-wire-slowdown-sticker"
 									}
 								}
 							}
@@ -318,7 +344,7 @@ data:extend({
 									},
 									{
 										type = "create-sticker",
-										sticker = "barbed-wire-slowdown-sticker"
+										sticker = "barbed-wire-super-slowdown-sticker"
 									}
 								}
 							}
@@ -393,7 +419,276 @@ data:extend({
 									},
 									{
 										type = "create-sticker",
+										sticker = "barbed-wire-super-slowdown-sticker"
+									}
+								}
+							}
+						}
+					},
+					{
+						type = "create-entity",
+						trigger_created_entity = true,
+						entity_name = "barbed-wire-signal"
+					}
+				}
+			}
+		}
+	},
+	
+	-- standard hazard 
+	{
+		type = "land-mine",
+		name = "barbed-wire-hazard",
+		icon = "__Barbed-Wire__/graphics/standard-safe.png",
+		flags = {},
+		fast_replaceable_group = "barbed-wires",
+		max_health = 0,
+		collision_box = {{-0.4,-0.4}, {0.4, 0.4}},
+		collision_mask = {},
+		picture_safe =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		picture_set =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		trigger_radius = attackArea,
+		action =
+		{
+			type = "direct",
+			action_delivery =
+			{
+				type = "instant",
+				source_effects =
+				{
+					{
+						type = "nested-result",
+						affects_target = true,
+						action =
+						{	
+							type = "area",
+							perimeter = attackArea,
+							collision_mask = {"player-layer"},
+							action_delivery =
+							{
+								type = "instant",
+								target_effects =
+								{	
+									{
+										type = "damage",
+										damage = { amount = dmg, type = "physical"}
+									},
+									{
+										type = "create-sticker",
 										sticker = "barbed-wire-slowdown-sticker"
+									}
+								}
+							}
+						}
+					},
+					{
+						type = "create-entity",
+						trigger_created_entity = true,
+						entity_name = "barbed-wire-signal"
+					}
+				}
+			}
+		}
+	},
+	-- reinforced hazard 
+	{
+		type = "land-mine",
+		name = "reinforced-barbed-wire-hazard",
+		icon = "__Barbed-Wire__/graphics/reinforced-safe.png",
+		flags = {},
+		fast_replaceable_group = "barbed-wires",
+		max_health = 0,
+		collision_box = {{-0.4,-0.4}, {0.4, 0.4}},
+		collision_mask = {},
+		picture_safe =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		picture_set =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		trigger_radius = attackArea,
+		action =
+		{
+			type = "direct",
+			action_delivery =
+			{
+				type = "instant",
+				source_effects =
+				{
+					{
+						type = "nested-result",
+						affects_target = true,
+						action =
+						{	
+							type = "area",
+							perimeter = attackArea,
+							collision_mask = {"player-layer"},
+							action_delivery =
+							{
+								type = "instant",
+								target_effects =
+								{	
+									{
+										type = "damage",
+										damage = { amount = dmg * multi, type = "physical"}
+									},
+									{
+										type = "create-sticker",
+										sticker = "barbed-wire-slowdown-sticker"
+									}
+								}
+							}
+						}
+					},
+					{
+						type = "create-entity",
+						trigger_created_entity = true,
+						entity_name = "barbed-wire-signal"
+					}
+				}
+			}
+		}
+	},
+	-- slow hazard 
+	{
+		type = "land-mine",
+		name = "slow-barbed-wire-hazard",
+		icon = "__Barbed-Wire__/graphics/slow-safe.png",
+		flags = {},
+		fast_replaceable_group = "barbed-wires",
+		max_health = 0,
+		collision_box = {{-0.4,-0.4}, {0.4, 0.4}},
+		collision_mask = {},
+		picture_safe =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		picture_set =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		trigger_radius = attackArea,
+		action =
+		{
+			type = "direct",
+			action_delivery =
+			{
+				type = "instant",
+				source_effects =
+				{
+					{
+						type = "nested-result",
+						affects_target = true,
+						action =
+						{	
+							type = "area",
+							perimeter = attackArea,
+							collision_mask = {"player-layer"},
+							action_delivery =
+							{
+								type = "instant",
+								target_effects =
+								{	
+									{
+										type = "damage",
+										damage = { amount = dmg, type = "physical"}
+									},
+									{
+										type = "create-sticker",
+										sticker = "barbed-wire-super-slowdown-sticker"
+									}
+								}
+							}
+						}
+					},
+					{
+						type = "create-entity",
+						trigger_created_entity = true,
+						entity_name = "barbed-wire-signal"
+					}
+				}
+			}
+		}
+	},
+	-- reinforced-slow hazard 
+	{
+		type = "land-mine",
+		name = "reinforced-slow-barbed-wire-hazard",
+		icon = "__Barbed-Wire__/graphics/reinforced-slow-safe.png",
+		flags = {},
+		fast_replaceable_group = "barbed-wires",
+		max_health = 0,
+		collision_box = {{-0.4,-0.4}, {0.4, 0.4}},
+		collision_mask = {},
+		picture_safe =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		picture_set =
+		{
+			filename = "__Barbed-Wire__/graphics/clear.png",
+			priority = "medium",
+			width = 32,
+			height = 32,
+		},
+		trigger_radius = attackArea,
+		action =
+		{
+			type = "direct",
+			action_delivery =
+			{
+				type = "instant",
+				source_effects =
+				{
+					{
+						type = "nested-result",
+						affects_target = true,
+						action =
+						{	
+							type = "area",
+							perimeter = attackArea,
+							collision_mask = {"player-layer"},
+							action_delivery =
+							{
+								type = "instant",
+								target_effects =
+								{	
+									{
+										type = "damage",
+										damage = { amount = dmg * multi, type = "physical"}
+									},
+									{
+										type = "create-sticker",
+										sticker = "barbed-wire-super-slowdown-sticker"
 									}
 								}
 							}
