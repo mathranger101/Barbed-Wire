@@ -1,183 +1,173 @@
-local energyIter = 10
-local updateIter = 15
+local dmg = 2
+local multi = 3
+local playerCheckIter = 10
 local waitIter = 5
 local waitTime = (120 / waitIter) - (120 / waitIter) % 1
 
 local function poskey(entity)
+	-- gives the rounded down position of entity
     local position = entity.position
-    return tostring(entity.surface.name) .. ":" .. tostring(position.x) .. ":" .. tostring(position.y)
+    return tostring(entity.surface.name) .. ":" .. tostring(position.x - position.x % 1) .. ":" .. tostring(position.y - position.y % 1)
+end
+
+local function endsWith(str, key)
+	-- checks if str ends with key
+    return key == "" or key == string.sub(str, -string.len(key))
 end
 
 local function init()
-    -- create force to attack all entities
-    if game.forces.barbedWire == nil then
-        local wireForce = game.create_force("barbedWire")
-        for _, force in pairs(game.forces) do
-            wireForce.set_cease_fire(force, false)
-        end
-    end
     -- poskey, entity
     global.barbedWireMains = global.barbedWireMains or {}
-    global.barbedWireAccums = global.barbedWireAccums or {}
     global.barbedWireDummies = global.barbedWireDummies or {}
-    global.barbedWireHazards = global.barbedWireHazards or {}
-    -- poskey, health
-    global.barbedWireHealth = global.barbedWireHealth or {}
+    global.barbedWireDummies2 = global.barbedWireDummies2 or {}
+    global.barbedWireTurrets = global.barbedWireTurrets or {}
     -- poskey, {entity, time}
     global.barbedWireWaiting = global.barbedWireWaiting or {}
 end
 
-local function indexWires()
+local function indexAllWires()
     local Mains = global.barbedWireMains
     local Waiting = global.barbedWireWaiting
-    local Health = global.barbedWireHealth
-    local Hazards = global.barbedWireHazards
     -- search for all barbed-wires and index them
     for _, surface in pairs(game.surfaces) do
-        local findEntities = surface.find_entities_filtered
-        local createEntity = surface.create_entity
-        for _, wire in pairs(findEntities { name = "barbed-wire" }) do
-            local key = poskey(wire)
-            if Mains[key] == nil then
-                local hazard = createEntity { name = wire.name .. "-hazard", position = wire.position, force = "barbedWire" }
-                Mains[key] = wire
-                Waiting[key] = { wire, waitTime }
-                Health[key] = wire.health
-                Hazards[key] = hazard
-            end
-        end
-        for _, wire in pairs(findEntities { name = "reinforced-barbed-wire" }) do
-            local key = poskey(wire)
-            if Mains[key] == nil then
-                local hazard = createEntity { name = wire.name .. "-hazard", position = wire.position, force = "barbedWire" }
-                Mains[key] = wire
-                Waiting[key] = { wire, waitTime }
-                Health[key] = wire.health
-                Hazards[key] = hazard
-            end
-        end
-        for _, wire in pairs(findEntities { name = "slow-barbed-wire" }) do
-            local key = poskey(wire)
-            if Mains[key] == nil then
-                local hazard = createEntity { name = wire.name .. "-hazard", position = wire.position, force = "barbedWire" }
-                Mains[key] = wire
-                Waiting[key] = { wire, waitTime }
-                Health[key] = wire.health
-                Hazards[key] = hazard
-            end
-        end
-        for _, wire in pairs(findEntities { name = "reinforced-slow-barbed-wire" }) do
-            local key = poskey(wire)
-            if Mains[key] == nil then
-                local hazard = createEntity { name = wire.name .. "-hazard", position = wire.position, force = "barbedWire" }
-                Mains[key] = wire
-                Waiting[key] = { wire, waitTime }
-                Health[key] = wire.health
-                Hazards[key] = hazard
+        for _, wire in pairs(surface.find_entities_filtered { type = "land-mine" }) do
+            if endsWith(wire.name, "barbed-wire") then
+                local key = poskey(wire)
+                if Mains[key] == nil then
+                    Mains[key] = wire
+                    Waiting[key] = { wire, waitTime }
+                end
             end
         end
     end
 end
 
-local function unlockTech(reset)
+local function unlockTech()
     for _, force in pairs(game.forces) do
-        if reset then
-            force.reset_recipes()
-            force.reset_technologies()
+		force.reset_recipes()
+		force.reset_technologies()
+		local tech = force.technologies
+		local recipes = force.recipes
+        if tech["military"].researched then
+            recipes["standard-barbed-wire"].enabled = true
         end
-        if force.technologies["military"].researched then
-            force.recipes["barbed-wire"].enabled = true
+        if tech["military-2"].researched then
+            recipes["reinforced-barbed-wire"].enabled = true
+            recipes["slowing-barbed-wire"].enabled = true
+            recipes["conductive-barbed-wire"].enabled = true
         end
-        if force.technologies["military-2"].researched then
-            force.recipes["reinforced-barbed-wire"].enabled = true
+        if tech["military-3"].researched then
+            recipes["reinforced-slowing-barbed-wire"].enabled = true
+            recipes["reinforced-conductive-barbed-wire"].enabled = true
+            recipes["slowing-conductive-barbed-wire"].enabled = true
         end
-        if force.technologies["military-3"].researched then
-            force.recipes["slow-barbed-wire"].enabled = true
-        end
-        if force.technologies["military-4"].researched then
-            force.recipes["reinforced-slow-barbed-wire"].enabled = true
+        if tech["military-4"].researched then
+            recipes["reinforced-slowing-conductive-barbed-wire"].enabled = true
         end
     end
 end
 
 script.on_init(function()
     init()
-    indexWires()
+    indexAllWires()
 end)
 
 script.on_configuration_changed(function(data)
+	-- added
     if data.mod_changes ~= nil and data.mod_changes["Barbed-Wire"] ~= nil and data.mod_changes["Barbed-Wire"].old_version == nil then
         init()
-        unlockTech(false) -- do not reset
+        unlockTech()
     end
+	-- updated
     if data.mod_changes ~= nil and data.mod_changes["Barbed-Wire"] ~= nil and data.mod_changes["Barbed-Wire"].old_version ~= nil then
         init()
-        indexWires()
-        unlockTech(true) -- do reset
+		-- clear everything but mains, then reindex everything
+		global.barbedWireMains = {}
+		global.barbedWireAccums = nil
+		global.barbedWireHazards = nil
+		global.barbedWireHealth = nil
+		for _, surface in pairs(game.surfaces) do
+			for _, dummy in pairs(surface.find_entities_filtered { type = "simple-entity" }) do
+				if endsWith(dummy.name, "barbed-wire-dummy") then
+					dummy.destroy()
+				end
+			end
+		end
+        indexAllWires()
     end
 end)
 
 script.on_event(defines.events.on_tick,
     function(event)
         local tick = event.tick
-        if tick % energyIter == 0 then
-            for _, accum in pairs(global.barbedWireAccums) do
-                accum.energy = 0
-            end
-        end
+		-- build objects on delay
         if tick % waitIter == 0 then
             local Waiting = global.barbedWireWaiting
             for key, waiter in pairs(Waiting) do
                 -- reduce counter
                 waiter[2] = waiter[2] - 1
-                -- build accumulator
+                -- build
                 if waiter[2] == 0 then
                     local wire = waiter[1]
-                    local wireName = wire.name
-                    local wirePos = wire.position
-                    local wireForce = wire.force
+					local wireName = wire.name
+					local pos = wire.position 
+					local frc = wire.force
                     local createEntity = wire.surface.create_entity
-                    local accum = createEntity { name = wireName .. "-accumulator", position = wirePos, force = wireForce }
-                    local dummy = createEntity { name = wireName .. "-dummy", position = wirePos, force = wireForce }
-                    accum.health = wire.health
-                    global.barbedWireAccums[key] = accum
+                    local dummy = createEntity { name = wireName .. "-dummy", position = pos, force = frc }
+					dummy.destructible = false
                     global.barbedWireDummies[key] = dummy
+                    if string.find(wire.name, "conductive", 1, true) then
+                        local turret = createEntity { name = wireName .. "-charge-turret", position = pos, force = frc }
+						turret.destructible = false
+                        global.barbedWireTurrets[key] = turret
+                    else
+                        local dummy2 = createEntity { name = wireName .. "-dummy2", position = pos, force = frc }
+						dummy2.destructible = false
+                        global.barbedWireDummies2[key] = dummy2
+                    end
                     Waiting[key] = nil
                 end
             end
         end
-        if tick % updateIter == 0 then
-            for key, wire in pairs(global.barbedWireMains) do
-                local accum = global.barbedWireAccums[key]
-                local Health = global.barbedWireHealth
-                -- manage health
-                if wire.health ~= Health[key] then
-                    local newHealth = wire.health
-                    if accum then
-                        accum.health = newHealth
+		-- check for and damage players standing on wire
+        if tick % playerCheckIter == 0 then
+            for _, player in pairs(game.players) do
+                local character = player.character
+                if character then
+                    local key = poskey(character)
+                    if global.barbedWireDummies[key] then
+                        local wire = global.barbedWireMains[key]
+                        local damage = dmg
+                        if string.find(wire.name, "reinforced", 1, true) then
+                            damage = dmg * multi
+                        end
+                        character.damage(damage, wire.force, "physical")
                     end
-                    Health[key] = newHealth
-                elseif accum and accum.health > Health[key] then
-                    local newHealth = accum.health
-                    wire.health = newHealth
-                    Health[key] = newHealth
-                elseif accum and accum.health < Health[key] then
-                    local newHealth = accum.health
-                    wire.damage(Health[key] - accum.health, "neutral")
-                    Health[key] = newHealth
                 end
             end
         end
     end)
 
-script.on_event(defines.events.on_force_created,
+script.on_event(defines.events.on_trigger_created_entity,
     function(event)
-        local force = event.force
-        if force ~= game.forces.barbedWire then
-            game.forces.barbedWire.set_cease_fire(force, false)
+        local entity = event.entity
+        local entityName = entity.name
+		-- check what type of signal is sent, then send charge projectile at enemy
+        if entityName == "barbed-wire-signal" then
+            local createEntity = entity.surface.create_entity
+            local pos = entity.position
+            local temp = createEntity { name = "barbed-wire-temp-dummy", position = pos, force = "neutral" }
+            createEntity { name = "barbed-wire-charge-projectile", position = pos, force = entity.force, speed = 10, target = temp }
+            temp.destroy()
+        elseif entityName == "barbed-wire-reinforced-signal" then
+            local createEntity = entity.surface.create_entity
+            local pos = entity.position
+            local temp = createEntity { name = "barbed-wire-temp-dummy", position = pos, force = "neutral" }
+            createEntity { name = "barbed-wire-reinforced-charge-projectile", position = pos, force = entity.force, speed = 10, target = temp }
+            temp.destroy()
         end
     end)
-
+	
 script.on_event({
     defines.events.on_built_entity,
     defines.events.on_robot_built_entity
@@ -185,120 +175,39 @@ script.on_event({
     function(event)
         local entity = event.created_entity
         local entityName = entity.name
-        if entityName == "barbed-wire" or entityName == "reinforced-barbed-wire"
-                or entityName == "slow-barbed-wire" or entityName == "reinforced-slow-barbed-wire" then
+        if endsWith(entityName, "barbed-wire") then
             -- index
             local key = poskey(entity)
-            local hazard = entity.surface.create_entity { name = entityName .. "-hazard", position = entity.position, force = "barbedWire" }
             global.barbedWireMains[key] = entity
             global.barbedWireWaiting[key] = { entity, waitTime }
-            global.barbedWireHealth[key] = entity.health
-            global.barbedWireHazards[key] = hazard
-        end
-    end)
-
-script.on_event(defines.events.on_trigger_created_entity,
-    function(event)
-        local entity = event.entity
-        -- signal
-        if entity.name == "barbed-wire-signal" then
-            local Mains = global.barbedWireMains
-            local key = poskey(entity)
-            local surface = entity.surface
-            -- check for unregistered wires
-            if Mains[key] == nil then
-                local pos = entity.position
-                local findEntities = surface.find_entities_filtered
-                local wire = findEntities { name = "barbed-wire", position = pos }[1] or
-                        findEntities { name = "reinforced-barbed-wire", position = pos }[1] or
-                        findEntities { name = "slow-barbed-wire", position = pos }[1] or
-                        findEntities { name = "reinforced-slow-barbed-wire", position = pos }[1]
-                Mains[key] = wire
-                wire.surface.create_entity { name = wire.name .. "-hazard", position = wire.position, force = "barbedWire" }
-                global.barbedWireWaiting[key] = { wire, waitTime }
-            end
-            -- spawn charge projectile
-            local accum = global.barbedWireAccums[key]
-            if accum and accum.energy > 0 then
-                if accum.name == "reinforced-barbed-wire-accumulator" or accum.name == "reinforced-slow-barbed-wire-accumulator" then
-                    surface.create_entity { name = "reinforced-barbed-wire-charged-projectile", position = entity.position, force = entity.force, speed = 1.0, target = accum }
-                else
-                    surface.create_entity { name = "barbed-wire-charged-projectile", position = entity.position, force = entity.force, speed = 1.0, target = accum }
-                end
-            end
-            entity.destroy()
         end
     end)
 
 script.on_event({
     defines.events.on_preplayer_mined_item,
-    defines.events.on_robot_pre_mined
+    defines.events.on_robot_pre_mined,
+	defines.events.on_entity_died
 },
     function(event)
+		local Dummies = global.barbedWireDummies
+		local Turrets = global.barbedWireTurrets
+		local Dummies2 = global.barbedWireDummies2
         local entity = event.entity
-        local name = entity.name
-        if name == "barbed-wire" or name == "reinforced-barbed-wire"
-                or name == "slow-barbed-wire" or name == "reinforced-slow-barbed-wire" then
-            local Accums = global.barbedWireAccums
-            local Dummies = global.barbedWireDummies
-            local Hazards = global.barbedWireHazards
+        local entityName = entity.name
+        if endsWith(entityName, "barbed-wire") then
             local key = poskey(entity)
             global.barbedWireMains[key] = nil
-            if Accums[key] then
-                Accums[key].destroy()
-                Accums[key] = nil
+            global.barbedWireWaiting[key] = nil
+            if Dummies[key] then
                 Dummies[key].destroy()
                 Dummies[key] = nil
             end
-            if Hazards[key] then
-                Hazards[key].destroy()
-                Hazards[key] = nil
+            if Turrets[key] then
+                Turrets[key].destroy()
+                Turrets[key] = nil
+            elseif Dummies2[key] then
+                Dummies2[key].destroy()
+                Dummies2[key] = nil
             end
-            global.barbedWireWaiting[key] = nil
-            global.barbedWireHealth[key] = nil
-        elseif name == "barbed-wire-accumulator" or name == "reinforced-barbed-wire-accumulator"
-                or name == "slow-barbed-wire-accumulator" or name == "reinforced-slow-barbed-wire-accumulator" then
-            local Mains = global.barbedWireMains
-            local Dummies = global.barbedWireDummies
-            local Hazards = global.barbedWireHazards
-            local key = poskey(entity)
-            Mains[key].destroy()
-            Mains[key] = nil
-            Dummies[key].destroy()
-            Dummies[key] = nil
-            Hazards[key].destroy()
-            Hazards[key] = nil
-            global.barbedWireAccums[key] = nil
-            global.barbedWireWaiting[key] = nil
-            global.barbedWireHealth[key] = nil
-        end
-    end)
-
-script.on_event(defines.events.on_entity_died,
-    function(event)
-        local entity = event.entity
-        local name = entity.name
-        if name == "barbed-wire" or name == "reinforced-barbed-wire"
-                or name == "slow-barbed-wire" or name == "reinforced-slow-barbed-wire" then
-            local Accums = global.barbedWireAccums
-            local Dummies = global.barbedWireDummies
-            local Hazards = global.barbedWireHazards
-            local key = poskey(entity)
-            global.barbedWireMains[key] = nil
-            if Accums[key] then
-                Accums[key].destroy()
-                Accums[key] = nil
-                Dummies[key].destroy()
-                Dummies[key] = nil
-            end
-            if Hazards[key] then
-                Hazards[key].destroy()
-                Hazards[key] = nil
-            end
-            global.barbedWireWaiting[key] = nil
-            global.barbedWireHealth[key] = nil
-        elseif name == "barbed-wire-accumulator" or name == "reinforced-barbed-wire-accumulator"
-                or name == "slow-barbed-wire-accumulator" or name == "reinforced-slow-barbed-wire-accumulator" then
-            global.barbedWireMains[poskey(entity)].die()
         end
     end)

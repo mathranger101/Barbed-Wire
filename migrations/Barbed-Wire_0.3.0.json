@@ -1,0 +1,20 @@
+{
+	"item":
+	[
+		["barbed-wire", "standard-barbed-wire"],
+		["reinforced-barbed-wire", "reinforced-barbed-wire"],
+		["slow-barbed-wire", "slowing-barbed-wire"],
+		["reinforced-slow-barbed-wire", "reinforced-slowing-barbed-wire"]
+	],
+	"entity":
+	[
+		["barbed-wire", "standard-barbed-wire"],
+		["reinforced-barbed-wire", "reinforced-barbed-wire"],
+		["slow-barbed-wire", "slowing-barbed-wire"],
+		["reinforced-slow-barbed-wire", "reinforced-slowing-barbed-wire"],
+		["barbed-wire-dummy", "standard-barbed-wire-dummy"],
+		["reinforced-barbed-wire-dummy", "reinforced-barbed-wire-dummy"],
+		["slow-barbed-wire-dummy", "slowing-barbed-wire-dummy"],
+		["reinforced-slow-barbed-wire-dummy", "reinforced-slowing-barbed-wire-dummy"]
+	]
+}
