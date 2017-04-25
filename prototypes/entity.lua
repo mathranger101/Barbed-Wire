@@ -68,8 +68,8 @@ local entities =
 		{
 			filename = "__Barbed-Wire__/graphics/clear.png",
 			priority = "medium",
-			width = 32,
-			height = 32,
+			width = 1,
+			height = 1,
 			frame_count = 1,
 			direction_count = 1
 		}
@@ -101,8 +101,8 @@ local entities =
 		{
 			filename = "__Barbed-Wire__/graphics/clear.png",
 			priority = "medium",
-			width = 32,
-			height = 32,
+			width = 1,
+			height = 1,
 			frame_count = 1,
 			direction_count = 1
 		}
@@ -117,8 +117,8 @@ local entities =
 		{
 			filename = "__Barbed-Wire__/graphics/clear.png",
 			priority = "medium",
-			width = 32,
-			height = 32,
+			width = 1,
+			height = 1,
 			frame_count = 1,
 			direction_count = 1
 		}
@@ -133,8 +133,8 @@ local entities =
 		{
 			filename = "__Barbed-Wire__/graphics/clear.png",
 			priority = "medium",
-			width = 32,
-			height = 32,
+			width = 1,
+			height = 1,
 			frame_count = 1
 		}
 	},
@@ -144,14 +144,13 @@ local entities =
 		name = "barbed-wire-temp-dummy",
 		flags = {"not-on-map"},
 		collision_mask = {},
-		max_health = 0,
 		render_layer = "object",
 		pictures =
 		{
 			{
 				filename = "__Barbed-Wire__/graphics/clear.png",
-				width = 32,
-				height = 32
+				width = 1,
+				height = 1
 			}
 		}
 	}
@@ -204,15 +203,17 @@ for _,wireType in ipairs({"standard", "reinforced", "slowing", "conductive", "re
 			{
 				filename = "__Barbed-Wire__/graphics/"..wireType.."-safe.png",
 				priority = "medium",
-				width = 32,
+				width = 36,
 				height = 32,
+				shift = {0.055, 0}
 			},
 			picture_set =
 			{
 				filename = "__Barbed-Wire__/graphics/"..wireType.."-set.png",
 				priority = "medium",
-				width = 32,
+				width = 36,
 				height = 32,
+				shift = {0.055, 0}
 			},
 			trigger_radius = attackArea,
 			action =
@@ -265,13 +266,13 @@ for _,wireType in ipairs({"standard", "reinforced", "slowing", "conductive", "re
 			collision_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
 			collision_mask = {"object-layer", "water-tile"},
 			render_layer = "corpse",
-			max_health = 0,
 			pictures =
 			{
 				{
 					filename = "__Barbed-Wire__/graphics/"..wireType.."-barbed-wire-base.png",
-					width = 32,
-					height = 32
+					width = 36,
+					height = 32,
+					shift = {0.055, 0}
 				}
 			}
 		}
@@ -292,7 +293,6 @@ for _,wireType in ipairs({"standard", "reinforced", "slowing", "conductive", "re
 				},
 				collision_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
 				collision_mask = {"object-layer", "water-tile"},
-				max_health = 0,
 				rotation_speed = 1,
 				preparing_speed = 0.2,
 				folding_speed = 0.1,
@@ -429,7 +429,6 @@ for _,wireType in ipairs({"standard", "reinforced", "slowing", "conductive", "re
 				collision_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
 				collision_mask = {"object-layer", "water-tile"},
 				render_layer = "object",
-				max_health = 0,
 				pictures =
 				{
 					{

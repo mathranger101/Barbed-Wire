@@ -87,8 +87,14 @@ script.on_configuration_changed(function(data)
 		global.barbedWireHazards = nil
 		global.barbedWireHealth = nil
 		for _, surface in pairs(game.surfaces) do
-			for _, dummy in pairs(surface.find_entities_filtered { type = "simple-entity" }) do
+			for _, dummy in pairs(surface.find_entities_filtered {}) do
 				if endsWith(dummy.name, "barbed-wire-dummy") then
+					dummy.destroy()
+				elseif endsWith(dummy.name, "barbed-wire-dummy2") then
+					dummy.destroy()
+				elseif endsWith(dummy.name, "barbed-wire-charge-turret") then
+					dummy.destroy()
+				elseif endsWith(dummy.name, "barbed-wire-signal") then
 					dummy.destroy()
 				end
 			end
@@ -159,12 +165,14 @@ script.on_event(defines.events.on_trigger_created_entity,
             local temp = createEntity { name = "barbed-wire-temp-dummy", position = pos, force = "neutral" }
             createEntity { name = "barbed-wire-charge-projectile", position = pos, force = entity.force, speed = 10, target = temp }
             temp.destroy()
+			entity.destroy()
         elseif entityName == "barbed-wire-reinforced-signal" then
             local createEntity = entity.surface.create_entity
             local pos = entity.position
             local temp = createEntity { name = "barbed-wire-temp-dummy", position = pos, force = "neutral" }
             createEntity { name = "barbed-wire-reinforced-charge-projectile", position = pos, force = entity.force, speed = 10, target = temp }
             temp.destroy()
+			entity.destroy()
         end
     end)
 	
